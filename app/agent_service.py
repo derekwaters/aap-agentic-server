@@ -41,13 +41,9 @@ class AgentService:
                 timeout=10.0 * 60.0
             )
 
-            sampling_params = {
-                "strategy": {"type": "greedy"},
-                "max_tokens": 5000,
-            }
-            
-            cprint(f"Inference Parameters:\n\tModel: {model_id}\n\tSampling Parameters: {sampling_params}", "green")
+            cprint(f"Inference Parameters:\n\tModel: {model_id}", "green")
             cprint(f"Using AAP MCP URL {aap_mcp_url}", "green")
+
 
             try:
                 client.toolgroups.unregister(toolgroup_id="mcp::ansible-aap-server")
@@ -72,8 +68,7 @@ class AgentService:
             self.agent = ReActAgent(
                 client=client,
                 model=model_id,
-                tools=["mcp::ansible-aap-server", "builtin::websearch"],
-                sampling_params=sampling_params,
+                #tools=["mcp::ansible-aap-server", "builtin::websearch"],
             )
 
         except APITimeoutError as e:
@@ -138,7 +133,9 @@ class AgentService:
             # If the agent supports streaming, we would collect chunks here
             # For now, we'll simulate the behavior
             if hasattr(self.agent, 'create_turn'):
-                self.agent.create_session(session_id)
+                llama_session_id = self.agent.create_session(session_id)
+
+                cprint("AGENT: Created new session", "yellow")
 
                 response = self.agent.create_turn(
                     messages=[
@@ -147,15 +144,18 @@ class AgentService:
                             "content": text,
                         }
                     ],
-                    session_id=session_id,
+                    session_id=llama_session_id,
                     stream=True
                 )
 
                 # Try to get streaming output if available
                 for log in EventLogger().log(response):
-                    self.session_manager.update_session(session_id, log.print(), False)
-                self.session_manager.update_session(session_id, response.steps, True)
-                
+                    cprint(f"AGENT: Got update {log}", "yellow")
+                    accumulated_response += log
+                    self.session_manager.update_session(session_id, accumulated_response, False)
+
+                cprint("AGENT: Session Complete", "yellow")
+
             else:
                 # Fallback: simulate agent response
                 accumulated_response = f"Response to: {text}"
