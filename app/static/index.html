@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AAP Agentic Chat</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+    <section class="chat-container">
+        <div class="chat-header">
+            <h1>Agentic Assistant</h1>
+            <p class="status" id="status">Ask me anything and I’ll respond shortly.</p>
+        </div>
+        <div id="response" aria-live="polite">
+            The assistant’s reply will appear here.
+        </div>
+        <form id="chat-form">
+            <label for="chat-input" class="sr-only">Message</label>
+            <textarea id="chat-input" placeholder="Type your message..." required></textarea>
+            <button id="send-btn" type="submit">Send</button>
+        </form>
+    </section>
+    <script src="/static/chat.js" defer></script>
+</body>
+</html>
+

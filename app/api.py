@@ -1,8 +1,11 @@
 """REST API endpoints for the AAP Agentic Server."""
 import asyncio
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from app.models import (
     SendChatRequest,
     SendChatResponse,
@@ -13,6 +16,9 @@ from app.session_manager import SessionManager
 from app.agent_service import AgentService
 
 app = FastAPI(title="AAP Agentic Server", version="1.0.0")
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Initialise the agent configuration
 load_dotenv(override=True)
@@ -25,21 +31,27 @@ session_manager = SessionManager()
 agent_service = AgentService(session_manager, base_url, aap_mcp_url, model_id)
 
 
+@app.get("/", response_class=FileResponse)
+async def serve_frontend():
+    """Serve the chatbot UI."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
 @app.post("/api/send_chat", response_model=SendChatResponse)
 async def send_chat(request: SendChatRequest):
     """
     Send a chat message to the AI Agent.
-    
+
     This endpoint creates a new agent session and submits the message
     asynchronously. Returns the session_id for tracking the conversation.
     """
     # Create a new session
     session_id = session_manager.create_session()
-    
+
     # Start the agent turn asynchronously in the background
     # Don't await - let it run in the background
     asyncio.create_task(agent_service.create_turn_async(session_id, request.text))
-    
+
     return SendChatResponse(session_id=session_id)
 
 
@@ -47,15 +59,15 @@ async def send_chat(request: SendChatRequest):
 async def get_chat(request: GetChatRequest):
     """
     Get the current status and response from an AI Agent session.
-    
+
     This endpoint retrieves any ongoing output from the AI Agent turn.
     The agent may still be processing, so chat_complete may be False.
     """
     session = session_manager.get_session(request.session_id)
-    
+
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     return GetChatResponse(
         response=session.response,
         chat_complete=session.complete
