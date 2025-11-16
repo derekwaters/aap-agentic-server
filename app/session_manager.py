@@ -23,12 +23,13 @@ class SessionManager:
         with self._lock:
             return self._sessions.get(session_id)
     
-    def update_session(self, session_id: str, response: str, complete: bool):
+    def update_session(self, session_id: str, response: str, answer: str, complete: bool):
         """Update session with new response and completion status."""
         with self._lock:
             if session_id in self._sessions:
                 self._sessions[session_id].response = response
                 self._sessions[session_id].complete = complete
+                self._sessions[session_id].answer = answer
 
 
 class SessionState:
@@ -37,5 +38,6 @@ class SessionState:
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.response: str = ""
+        self.answer: str = ""
         self.complete: bool = False
 

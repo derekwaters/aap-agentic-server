@@ -70,6 +70,7 @@ async def get_chat(request: GetChatRequest):
 
     return GetChatResponse(
         response=session.response,
+        answer=session.answer,
         chat_complete=session.complete
     )
 

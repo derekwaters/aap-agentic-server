@@ -20,5 +20,6 @@ class GetChatRequest(BaseModel):
 class GetChatResponse(BaseModel):
     """Response model for get_chat endpoint."""
     response: str
+    answer: str
     chat_complete: bool
 

@@ -127,11 +127,11 @@ class AgentService:
                 partial_response = ""
                 for i, word in enumerate(words):
                     partial_response += word + " "
-                    self.session_manager.update_session(session_id, partial_response.strip(), False)
+                    self.session_manager.update_session(session_id, partial_response.strip(), "", False)
                     time.sleep(0.1)  # Simulate processing delay
                 
                 # Final update with complete response
-                self.session_manager.update_session(session_id, accumulated_response, True)
+                self.session_manager.update_session(session_id, accumulated_response, accumulated_response, True)
                 return
             
             # Create turn with the agent
@@ -157,13 +157,18 @@ class AgentService:
                     stream=True
                 )
 
+                final_response = None
+
                 # Try to get streaming output if available
                 for log in EventLogger().log(response):
                     cprint(f"AGENT: Got update {log}", "yellow")
                     accumulated_response += f"{log}"
-                    self.session_manager.update_session(session_id, accumulated_response, False)
+                    final_response = log
+                    self.session_manager.update_session(session_id, accumulated_response, "", False)
 
-                self.session_manager.update_session(session_id, accumulated_response, True)
+                cprint("AGENT: Final answer: ". final_response.content)
+                
+                self.session_manager.update_session(session_id, accumulated_response, final_response.content, True)
                 cprint("AGENT: Session Complete", "yellow")
 
             else:
