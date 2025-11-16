@@ -1,6 +1,7 @@
 const form = document.getElementById("chat-form");
 const input = document.getElementById("chat-input");
 const responseBox = document.getElementById("response");
+const finalAnswerBox = document.getElementById("final-answer");
 const statusText = document.getElementById("status");
 const sendBtn = document.getElementById("send-btn");
 
@@ -20,7 +21,8 @@ form?.addEventListener("submit", async (event) => {
 
     setInputDisabled(true);
     statusText.textContent = "Sending your message...";
-    responseBox.textContent = "";
+    responseBox.textContent = "The assistant's response will stream here...";
+    finalAnswerBox.textContent = "Waiting for final answer...";
 
     try {
         const res = await fetch("/api/send_chat", {
@@ -71,6 +73,7 @@ const pollSession = async (sessionId) => {
             clearInterval(pollInterval);
             pollInterval = null;
             statusText.textContent = "Ready for your next question.";
+            finalAnswerBox.textContent = data.response || "No response received.";
             setInputDisabled(false);
         }
     } catch (err) {
