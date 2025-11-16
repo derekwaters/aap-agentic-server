@@ -73,7 +73,13 @@ const pollSession = async (sessionId) => {
             clearInterval(pollInterval);
             pollInterval = null;
             statusText.textContent = "Ready for your next question.";
-            finalAnswerBox.textContent = data.answer || "No answer received.";
+
+            if (data.answer) {
+                var parsedData = JSON.parse(data.answer);
+                finalAnswerBox.textContent = parsedData.answer;
+            } else {
+                finalAnswerBox.textContent = "No answer received.";
+            }
             setInputDisabled(false);
         }
     } catch (err) {

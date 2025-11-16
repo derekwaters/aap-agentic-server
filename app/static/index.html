@@ -9,19 +9,26 @@
 <body>
     <section class="chat-container">
         <div class="chat-main">
+            <img src="/static/logo.png"></img>
+            <h1>AIOps with Guardrails - Team-Smoke-And-Mirrors</h1>
+        </div>
+        <div class="chat-main">
             <div class="chat-controls">
                 <div class="chat-header">
                     <h1>Agentic Assistant</h1>
                     <p class="status" id="status">Ask me anything and I'll respond shortly.</p>
-                </div>
-                <div id="final-answer" aria-live="polite">
-                    The final answer will appear here.
                 </div>
                 <form id="chat-form">
                     <label for="chat-input" class="sr-only">Message</label>
                     <textarea id="chat-input" placeholder="Type your message..." required></textarea>
                     <button id="send-btn" type="submit">Send</button>
                 </form>
+                <div class="response-header">
+                    <h2>Final Answer</h2>
+                </div>
+                <div id="final-answer" aria-live="polite">
+                    The final answer will appear here.
+                </div>
             </div>
             <div class="chat-response-panel">
                 <div class="response-header">

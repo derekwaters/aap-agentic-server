@@ -72,7 +72,7 @@ class AgentService:
             self.agent = ReActAgent(
                 client=client,
                 model=model_id,
-                tools=["mcp::ansible-aap-server", "builtin::websearch"],
+                tools=["mcp::ansible-aap-server"],#, "builtin::websearch"],
                 #tools=toolset
                 json_response_format=True,
                 sampling_params={
@@ -160,23 +160,38 @@ class AgentService:
                 final_response = None
 
                 # Try to get streaming output if available
-                for log in EventLogger().log(response):
-                    cprint(f"AGENT: Got update {log}", "yellow")
-                    accumulated_response += f"{log}"
-                    final_response = log
-                    self.session_manager.update_session(session_id, accumulated_response, "", False)
+#                for log in EventLogger().log(response):
+#                    # cprint(f"AGENT: Got update {log}", "yellow")
+#                    accumulated_response += f"{log}"
+#                    final_response = log
+#                    self.session_manager.update_session(session_id, accumulated_response, "", False)
 
-                cprint("AGENT: Final answer: ". final_response.content)
+                for chunk in response:
+                    #if hasattr(chunk, "error"):
+                    #    if "message" in chunk.error:
+                    #        raise Exception(f"ERROR: {chunk.error['message']}")
+                    #else:
+                    #    raise Exception(f"ERROR: {chunk.error}")
+                    #
+
+                    # cprint(f"AGENT: Got chunk {chunk}", "yellow")
+                    if hasattr(chunk, "event") and hasattr(chunk.event, "payload") and hasattr(chunk.event.payload, "delta"):
+                        accumulated_response += f"{chunk.event.payload.delta.text}"
+                        self.session_manager.update_session(session_id, accumulated_response, "", False)
+
+                    final_chunk = chunk
+
+                cprint(f"AGENT: Final answer: {final_chunk.event.payload.turn.output_message.content}", "yellow")
                 
-                self.session_manager.update_session(session_id, accumulated_response, final_response.content, True)
+                self.session_manager.update_session(session_id, accumulated_response, f"{final_chunk.event.payload.turn.output_message.content}", True)
                 cprint("AGENT: Session Complete", "yellow")
 
             else:
                 # Fallback: simulate agent response
                 accumulated_response = f"Response to: {text}"
-                self.session_manager.update_session(session_id, accumulated_response, True)
+                self.session_manager.update_session(session_id, accumulated_response, "", True)
                 
         except Exception as e:
             error_message = f"Error during agent execution: {str(e)}"
             accumulated_response = error_message
-            self.session_manager.update_session(session_id, accumulated_response, True)
+            self.session_manager.update_session(session_id, accumulated_response, "", True)
