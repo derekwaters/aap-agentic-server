@@ -75,9 +75,7 @@ class AgentService:
                 tools=["mcp::ansible-aap-server"],#, "builtin::websearch"],
                 #tools=toolset
                 json_response_format=True,
-                sampling_params={
-                    "max_tokens": 5000
-                }
+                sampling_params={"max_tokens":1024},
             )
 
         except APITimeoutError as e:
@@ -157,33 +155,40 @@ class AgentService:
                     stream=True
                 )
 
-                final_response = None
-
                 # Try to get streaming output if available
-#                for log in EventLogger().log(response):
-#                    # cprint(f"AGENT: Got update {log}", "yellow")
-#                    accumulated_response += f"{log}"
-#                    final_response = log
-#                    self.session_manager.update_session(session_id, accumulated_response, "", False)
+                current_role_block = ""
 
-                for chunk in response:
-                    #if hasattr(chunk, "error"):
-                    #    if "message" in chunk.error:
-                    #        raise Exception(f"ERROR: {chunk.error['message']}")
-                    #else:
-                    #    raise Exception(f"ERROR: {chunk.error}")
-                    #
+                for log in EventLogger().log(response):
+                    # cprint(f"AGENT: Got update {log}", "yellow")
+                    accumulated_response += f"{log}"
 
-                    # cprint(f"AGENT: Got chunk {chunk}", "yellow")
-                    if hasattr(chunk, "event") and hasattr(chunk.event, "payload") and hasattr(chunk.event.payload, "delta"):
-                        accumulated_response += f"{chunk.event.payload.delta.text}"
-                        self.session_manager.update_session(session_id, accumulated_response, "", False)
+                    if log.role is not None:
+                        current_role_block = log.content
+                    else:
+                        current_role_block += log.content
 
-                    final_chunk = chunk
-
-                cprint(f"AGENT: Final answer: {final_chunk.event.payload.turn.output_message.content}", "yellow")
+                    self.session_manager.update_session(session_id, accumulated_response, "", False)
                 
-                self.session_manager.update_session(session_id, accumulated_response, f"{final_chunk.event.payload.turn.output_message.content}", True)
+                cprint(f"AGENT: Final answer: {current_role_block}", "yellow")
+                
+                self.session_manager.update_session(session_id, accumulated_response, current_role_block, True)
+
+
+                ### HMMM, this section only seems to work for the first block of work, not subsequent ones...
+
+                # for chunk in response:
+                #     if hasattr(chunk, "event") and hasattr(chunk.event, "payload") and hasattr(chunk.event.payload, "delta"):
+                #         accumulated_response += f"{chunk.event.payload.delta.text}"
+                #         self.session_manager.update_session(session_id, accumulated_response, "", False)
+
+                #     final_chunk = chunk
+
+                # cprint(f"AGENT: Final answer: {final_chunk.event.payload.turn.output_message.content}", "yellow")
+                
+                # self.session_manager.update_session(session_id, accumulated_response, f"{final_chunk.event.payload.turn.output_message.content}", True)
+                
+                
+                
                 cprint("AGENT: Session Complete", "yellow")
 
             else:

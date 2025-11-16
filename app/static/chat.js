@@ -19,6 +19,17 @@ form?.addEventListener("submit", async (event) => {
         return;
     }
 
+    // If the text is valid JSON, we'll assume it's an event
+    try {
+        check_json = JSON.parse(text);
+        // We've got JSON, so let's "pad" the request:
+
+        text = "Find a job template to solve the following error: '" + text + "' If you find a solution, launch the job template with the relevant inventory. If you need an incident number, obtain one with the create_incident tool.";
+    } catch (SyntaxError)
+    {
+        // Don't need to do anything, just use the text as is
+    }
+
     setInputDisabled(true);
     statusText.textContent = "Sending your message...";
     responseBox.textContent = "The assistant's response will stream here...";
@@ -37,7 +48,6 @@ form?.addEventListener("submit", async (event) => {
 
         const data = await res.json();
         statusText.textContent = "Waiting for the assistant...";
-        input.value = "";
         startPolling(data.session_id);
     } catch (err) {
         console.error(err);
@@ -68,6 +78,7 @@ const pollSession = async (sessionId) => {
         const data = await res.json();
         if (data.response) {
             responseBox.textContent = data.response;
+            responseBox.scrollTop = responseBox.scrollHeight;
         }
         if (data.chat_complete) {
             clearInterval(pollInterval);
@@ -80,6 +91,7 @@ const pollSession = async (sessionId) => {
             } else {
                 finalAnswerBox.textContent = "No answer received.";
             }
+            input.value = "";
             setInputDisabled(false);
         }
     } catch (err) {
