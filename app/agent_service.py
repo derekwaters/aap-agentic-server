@@ -64,11 +64,20 @@ class AgentService:
 
             print(f"Your Llama Stack server is registered with the following tool groups @ {set(registered_toolgroups)} \n")
 
-
+            toolset = []
+            for tool in registered_tools:
+                if (tool.toolgroup_id in ["mcp::ansible-aap-server", "builtin::websearch"]):
+                    toolset.append(tool)
+                    
             self.agent = ReActAgent(
                 client=client,
                 model=model_id,
-                #tools=["mcp::ansible-aap-server", "builtin::websearch"],
+                tools=["mcp::ansible-aap-server", "builtin::websearch"],
+                #tools=toolset
+                json_response_format=True,
+                sampling_params={
+                    "max_tokens": 5000
+                }
             )
 
         except APITimeoutError as e:
@@ -151,9 +160,10 @@ class AgentService:
                 # Try to get streaming output if available
                 for log in EventLogger().log(response):
                     cprint(f"AGENT: Got update {log}", "yellow")
-                    accumulated_response += log
+                    accumulated_response += f"{log}"
                     self.session_manager.update_session(session_id, accumulated_response, False)
 
+                self.session_manager.update_session(session_id, accumulated_response, True)
                 cprint("AGENT: Session Complete", "yellow")
 
             else:

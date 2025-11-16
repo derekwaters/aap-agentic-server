@@ -11,6 +11,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY main.py .
 COPY app/*.py ./app/
+COPY app/static/* ./app/static/
 
 # Expose port if needed (optional, for HTTP server)
 EXPOSE 8000
@@ -20,6 +21,4 @@ EXPOSE 8000
 # ENV REMOTE_AAP_MCP_URL=your-aap-mcp-url
 # ENV LLAMASTACK_MODEL_ID=ollama/qwen3:4b
 
-# NOTE: Run python main.py
-
-CMD ["/bin/bash"]
+CMD ["python", "main.py"]
