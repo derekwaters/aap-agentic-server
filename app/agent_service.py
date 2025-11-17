@@ -160,12 +160,14 @@ class AgentService:
 
                 for log in EventLogger().log(response):
                     # cprint(f"AGENT: Got update {log}", "yellow")
-                    accumulated_response += f"{log}"
 
                     if log.role is not None:
                         current_role_block = log.content
+                        accumulated_response += "\n\n"
                     else:
                         current_role_block += log.content
+
+                    accumulated_response += f"{log}"
 
                     self.session_manager.update_session(session_id, accumulated_response, "", False)
                 
